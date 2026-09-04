@@ -14,7 +14,6 @@
 * 🚀 **Live Interactive DApp:** [https://agentjury-genlayer.vercel.app/](https://agentjury-genlayer.vercel.app/)
 * 📦 **GitHub Repository:** [https://github.com/earnadvise/agentjury-genlayer](https://github.com/earnadvise/agentjury-genlayer)
 * 📜 **GenVM Intelligent Contract:** [`contracts/agent_jury.py`](./contracts/agent_jury.py)
-* 🎬 **Demo Video Script:** [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
 
 ---
 
@@ -79,8 +78,6 @@ genlayer-agent-tank/
 ├── .github/workflows/
 │   ├── ci.yml                # Automated CI pipeline
 │   └── deploy-pages.yml      # Automatic GitHub Pages deployment
-├── DEMO_SCRIPT.md            # 3-minute video demo script for final submission
-├── pitch_deck.html           # Interactive 4-slide presentation deck
 └── README.md                 # Project documentation
 ```
 
