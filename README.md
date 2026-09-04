@@ -1,6 +1,6 @@
 ﻿# ⚖️ AgentJury: The Trust & Escrow Layer for the Agentic Economy
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://earnadvise.github.io/agentjury-genlayer/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel%20Production-success?style=for-the-badge&logo=vercel)](https://agentjury-genlayer.vercel.app/)
 [![Built with GenLayer](https://img.shields.io/badge/Built%20with-GenLayer%20GenVM-7c3aed.svg?style=for-the-badge)](https://docs.genlayer.com)
 [![Smart Contract](https://img.shields.io/badge/Language-Python%20Intelligent%20Contracts-blue.svg?style=for-the-badge)](https://docs.genlayer.com)
 [![Hackathon](https://img.shields.io/badge/Hackathon-GenLayer%20Agent%20Tank-purple.svg?style=for-the-badge)](https://portal.genlayer.foundation/agent-tank)
@@ -11,7 +11,7 @@
 
 ## 🌐 Live Links
 
-* 🚀 **Live Interactive DApp:** [https://earnadvise.github.io/agentjury-genlayer/](https://earnadvise.github.io/agentjury-genlayer/)
+* 🚀 **Live Interactive DApp:** [https://agentjury-genlayer.vercel.app/](https://agentjury-genlayer.vercel.app/)
 * 📦 **GitHub Repository:** [https://github.com/earnadvise/agentjury-genlayer](https://github.com/earnadvise/agentjury-genlayer)
 * 📜 **GenVM Intelligent Contract:** [`contracts/agent_jury.py`](./contracts/agent_jury.py)
 * 🎬 **Demo Video Script:** [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
@@ -99,7 +99,7 @@ python scripts/simulate_agents.py
 ```
 
 ### 3. Launch the Interactive DApp Dashboard
-Open `index.html` in any web browser or visit the [Live Demo](https://earnadvise.github.io/agentjury-genlayer/).
+Visit the [Live Vercel Production DApp](https://agentjury-genlayer.vercel.app/).
 
 ---
 
