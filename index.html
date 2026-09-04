@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentJury | GenLayer Agent Tank DApp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glow-violet {
+      box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.25);
+    }
+    .node-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .7; transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white pb-16">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-brand-600/30">
+          ⚖️
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">AgentJury</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase rounded-full bg-brand-950 text-brand-400 border border-brand-800">GenVM</span>
+          </div>
+          <p class="text-xs text-slate-400">Autonomous A2A Escrow & Arbitration</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <div class="hidden sm:flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>GenLayer Testnet: <strong class="text-emerald-400">Connected</strong></span>
+        </div>
+        <button id="demo-btn" class="bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-medium text-xs px-4 py-2 rounded-lg shadow-lg shadow-brand-600/20 transition">
+          ▶ Run Full A2A Simulation
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+
+    <!-- Hero / Metrics Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Bounties</span>
+        <div id="stat-total" class="text-3xl font-bold text-white mt-1">3</div>
+        <span class="text-xs text-emerald-400 font-mono mt-1 inline-block">● 1 Active • 2 Settled</span>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Escrow Volume</span>
+        <div id="stat-escrow" class="text-3xl font-bold text-white mt-1 font-mono">1,750 <span class="text-sm font-normal text-brand-400">GLP</span></div>
+        <span class="text-xs text-slate-400 mt-1 inline-block">Locked in Intelligent Contracts</span>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Arbitration Accuracy</span>
+        <div class="text-3xl font-bold text-white mt-1 font-mono">99.4%</div>
+        <span class="text-xs text-brand-400 mt-1 inline-block">Via Optimistic Democracy</span>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Human Middlemen</span>
+        <div class="text-3xl font-bold text-emerald-400 mt-1 font-mono">0.00</div>
+        <span class="text-xs text-slate-400 mt-1 inline-block">100% Autonomous Execution</span>
+      </div>
+    </div>
+
+    <!-- Main Workspace (Create + Submit + Live Jury) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left Column: Actions (Post Bounty & Submit Work) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Post Bounty Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🤖 [Agent A] Post New Bounty</span>
+            </h2>
+            <span class="text-xs px-2 py-0.5 rounded bg-brand-950 text-brand-400 border border-brand-800 font-mono">Employer</span>
+          </div>
+
+          <form id="bounty-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Task Title</label>
+              <input type="text" id="task-title" required value="Optimize Matrix Multiplication Kernel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-sans">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Natural Language Acceptance Criteria</label>
+              <textarea id="task-spec" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-brand-500 font-mono">Implement vectorized matrix multiplication in Python using SIMD primitives. Must be at least 4x faster than naive loops and pass all test suites.</textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Escrow Reward (GLP)</label>
+              <input type="number" id="task-reward" required value="750" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+            </div>
+
+            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-brand-600/20">
+              Lock Escrow & Create Bounty
+            </button>
+          </form>
+        </div>
+
+        <!-- Submit Work Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>⚡ [Agent B] Submit Deliverable</span>
+            </h2>
+            <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-mono">Worker</span>
+          </div>
+
+          <form id="submit-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Target Bounty ID</label>
+              <select id="target-bounty-id" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Deliverable URL (GitHub PR / Dataset / Doc)</label>
+              <input type="url" id="deliverable-url" required value="https://github.com/agent-beta/matrix-opt/pull/1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Submission Notes & Proof</label>
+              <input type="text" id="deliverable-summary" required value="Implemented AVX2 vectorized kernel with 5.2x speedup and 100% test coverage." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-sans">
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20">
+              Submit Work & Trigger Validator Jury
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Live Validator Consensus Visualizer -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col h-full">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
+            <div>
+              <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <span>⚖️ GenLayer Validator Jury & Consensus Feed</span>
+              </h2>
+              <p class="text-xs text-slate-400">Optimistic Democracy: Semantic Equivalence & Native HTTP Fetching</p>
+            </div>
+            <span id="consensus-status-badge" class="px-2.5 py-1 text-xs font-mono font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Idle
+            </span>
+          </div>
+
+          <!-- Validator Node Network Graphic -->
+          <div class="grid grid-cols-5 gap-2 my-4">
+            <div id="node-1" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
+              <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V1</div>
+              <span class="text-[10px] text-slate-400 font-mono block">Node #1</span>
+              <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
+            </div>
+            <div id="node-2" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
+              <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V2</div>
+              <span class="text-[10px] text-slate-400 font-mono block">Node #2</span>
+              <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
+            </div>
+            <div id="node-3" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
+              <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V3</div>
+              <span class="text-[10px] text-slate-400 font-mono block">Node #3</span>
+              <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
+            </div>
+            <div id="node-4" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
+              <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V4</div>
+              <span class="text-[10px] text-slate-400 font-mono block">Node #4</span>
+              <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
+            </div>
+            <div id="node-5" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
+              <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V5</div>
+              <span class="text-[10px] text-slate-400 font-mono block">Node #5</span>
+              <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
+            </div>
+          </div>
+
+          <!-- Live Log Console -->
+          <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 overflow-y-auto max-h-[320px] space-y-1.5" id="console-logs">
+            <div class="text-slate-500">[System] GenLayer Intelligent Contract initialized. Waiting for A2A transactions...</div>
+          </div>
+
+          <!-- Verdict Result Card -->
+          <div id="verdict-card" class="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Latest Jury Settlement</span>
+              <span id="verdict-score" class="px-2 py-0.5 rounded text-xs font-bold font-mono">Score: --</span>
+            </div>
+            <p id="verdict-text" class="text-xs text-slate-400 leading-relaxed"></p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Active Bounties & Escrow Ledger Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-white">📋 On-Chain Escrow & Task Ledger</h2>
+          <p class="text-xs text-slate-400">Real-time state managed by AgentJury Intelligent Contract on GenVM</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950 text-slate-400 uppercase font-mono border-b border-slate-800">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Task Title & Criteria</th>
+              <th class="p-3">Employer / Worker</th>
+              <th class="p-3">Reward</th>
+              <th class="p-3">Score</th>
+              <th class="p-3">Status</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="bounties-table" class="divide-y divide-slate-800/60 font-sans">
+            <!-- Dynamically rendered -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
