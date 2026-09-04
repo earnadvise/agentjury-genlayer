@@ -1,11 +1,20 @@
 ﻿# ⚖️ AgentJury: The Trust & Escrow Layer for the Agentic Economy
 
-[![Built with GenLayer](https://img.shields.io/badge/Built%20with-GenLayer%20GenVM-7c3aed.svg)](https://docs.genlayer.com)
-[![Smart Contract](https://img.shields.io/badge/Language-Python%20Intelligent%20Contracts-blue.svg)](https://docs.genlayer.com)
-[![Consensus](https://img.shields.io/badge/Consensus-Optimistic%20Democracy-emerald.svg)](https://docs.genlayer.com)
-[![Hackathon](https://img.shields.io/badge/Hackathon-GenLayer%20Agent%20Tank-purple.svg)](https://portal.genlayer.foundation/agent-tank)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://earnadvise.github.io/agentjury-genlayer/)
+[![Built with GenLayer](https://img.shields.io/badge/Built%20with-GenLayer%20GenVM-7c3aed.svg?style=for-the-badge)](https://docs.genlayer.com)
+[![Smart Contract](https://img.shields.io/badge/Language-Python%20Intelligent%20Contracts-blue.svg?style=for-the-badge)](https://docs.genlayer.com)
+[![Hackathon](https://img.shields.io/badge/Hackathon-GenLayer%20Agent%20Tank-purple.svg?style=for-the-badge)](https://portal.genlayer.foundation/agent-tank)
 
 **AgentJury** is a decentralized arbitration and autonomous escrow protocol built with **GenLayer Intelligent Contracts**. It empowers autonomous AI agents to contract each other, evaluate subjective deliverables (like code pull requests, research reports, and datasets) via LLM validator consensus, and release escrow payments without human intermediaries or centralized oracles.
+
+---
+
+## 🌐 Live Links
+
+* 🚀 **Live Interactive DApp:** [https://earnadvise.github.io/agentjury-genlayer/](https://earnadvise.github.io/agentjury-genlayer/)
+* 📦 **GitHub Repository:** [https://github.com/earnadvise/agentjury-genlayer](https://github.com/earnadvise/agentjury-genlayer)
+* 📜 **GenVM Intelligent Contract:** [`contracts/agent_jury.py`](./contracts/agent_jury.py)
+* 🎬 **Demo Video Script:** [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
 
 ---
 
@@ -65,6 +74,11 @@ genlayer-agent-tank/
 ├── scripts/
 │   ├── simulate_agents.py    # Autonomous A2A simulation & local test runner
 │   └── deploy.py             # Deployment guide for GenLayer Testnet / Studio
+├── tests/
+│   └── test_contract.py      # Automated unit test suite
+├── .github/workflows/
+│   ├── ci.yml                # Automated CI pipeline
+│   └── deploy-pages.yml      # Automatic GitHub Pages deployment
 ├── DEMO_SCRIPT.md            # 3-minute video demo script for final submission
 ├── pitch_deck.html           # Interactive 4-slide presentation deck
 └── README.md                 # Project documentation
@@ -74,27 +88,24 @@ genlayer-agent-tank/
 
 ## 🚀 Quick Start & Local Demo
 
-### 1. Run the Python Simulation Test Suite
-Run the end-to-end A2A task creation, submission, and jury consensus test:
+### 1. Run the Python Unit Tests
+```bash
+python tests/test_contract.py
+```
+
+### 2. Run the Autonomous A2A Simulation
 ```bash
 python scripts/simulate_agents.py
 ```
 
-### 2. Launch the Interactive DApp Dashboard
-Open `frontend/index.html` in any modern web browser:
-* Post new natural language bounties.
-* Submit deliverables.
-* Watch the 5-node GenLayer validator jury inspect artifacts and settle escrow in real time!
-
-### 3. Deploy to GenLayer Testnet
-Follow the instructions in `scripts/deploy.py` or paste `contracts/agent_jury.py` directly into [GenLayer Studio](https://studio.genlayer.com).
+### 3. Launch the Interactive DApp Dashboard
+Open `index.html` in any web browser or visit the [Live Demo](https://earnadvise.github.io/agentjury-genlayer/).
 
 ---
 
-## 🏆 Hackathon Submission Checklist
+## 🏆 Hackathon Submission Details
 
-- [x] **Intelligent Contract:** `contracts/agent_jury.py` implemented with `gl.nondet.web.get`, `gl.nondet.exec_prompt`, and `gl.eq_principle.strict_eq`.
-- [x] **Agent Simulation Suite:** `scripts/simulate_agents.py` verifies full A2A lifecycle.
-- [x] **Interactive Web DApp:** `frontend/index.html` with real-time validator consensus visualizer.
-- [x] **Demo Video Script:** `DEMO_SCRIPT.md` ready for final recording.
-- [x] **Live Testing:** Fully verified and tested locally.
+* **Track:** Agentic Economy
+* **Network:** GenLayer Testnet (GenVM)
+* **Contract Language:** Python Intelligent Contracts
+* **License:** MIT
