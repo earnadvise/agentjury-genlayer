@@ -1,6 +1,4 @@
-﻿// AgentJury Frontend Application Logic, Wallet Integration & Simulation Engine
-
-let connectedAccount = "0xAgentAlpha_1111";
+﻿// AgentJury Frontend Application Logic & Simulation Engine
 
 let bounties = [
   {
@@ -66,47 +64,6 @@ function log(msg, type = "info") {
   consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
-// Wallet Connection Handler (MetaMask, Rabby, EIP-1193)
-async function connectWallet() {
-  const btnText = document.getElementById("wallet-text");
-  const dot = document.getElementById("wallet-dot");
-  const accountEl = document.getElementById("stat-account");
-
-  if (window.ethereum) {
-    try {
-      btnText.textContent = "Connecting...";
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      if (accounts && accounts.length > 0) {
-        connectedAccount = accounts[0];
-        const shortAddr = `${connectedAccount.slice(0, 6)}...${connectedAccount.slice(-4)}`;
-        btnText.textContent = shortAddr;
-        dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-        accountEl.textContent = shortAddr;
-        log(`[Wallet] Connected to Web3 Account: ${connectedAccount}`, "success");
-      }
-    } catch (err) {
-      console.warn("Wallet request rejected or closed", err);
-      // Fallback to simulated operator address
-      connectedAccount = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join("");
-      const shortAddr = `${connectedAccount.slice(0, 6)}...${connectedAccount.slice(-4)}`;
-      btnText.textContent = shortAddr;
-      dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-      accountEl.textContent = shortAddr;
-      log(`[Wallet] Simulated Web3 Operator Account connected: ${shortAddr}`, "success");
-    }
-  } else {
-    // Generate simulated Web3 session
-    connectedAccount = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join("");
-    const shortAddr = `${connectedAccount.slice(0, 6)}...${connectedAccount.slice(-4)}`;
-    btnText.textContent = shortAddr;
-    dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-    accountEl.textContent = shortAddr;
-    log(`[Wallet] Active Web3 Operator session initialized: ${shortAddr}`, "success");
-  }
-}
-
-document.getElementById("connect-wallet-btn").addEventListener("click", connectWallet);
-
 function updateMetrics() {
   const total = bounties.length;
   const volume = bounties.reduce((acc, b) => acc + Number(b.reward), 0);
@@ -153,8 +110,8 @@ function renderTable() {
         ${b.deliverable_url ? `<a href="${b.deliverable_url}" target="_blank" class="text-[10px] text-brand-400 hover:underline block mt-0.5 font-mono">🔗 ${b.deliverable_url}</a>` : ''}
       </td>
       <td class="p-3 font-mono text-[11px] text-slate-400">
-        <div>E: <span class="text-slate-300">${b.creator.slice(0, 8)}...</span></div>
-        <div>W: <span class="text-slate-300">${b.worker ? b.worker.slice(0, 8) + '...' : 'None'}</span></div>
+        <div>E: <span class="text-slate-300">${b.creator.slice(0, 10)}...</span></div>
+        <div>W: <span class="text-slate-300">${b.worker ? b.worker.slice(0, 10) + '...' : 'None'}</span></div>
       </td>
       <td class="p-3 font-mono font-bold text-slate-200">${b.reward} GLP</td>
       <td class="p-3 font-mono">
@@ -253,7 +210,7 @@ document.getElementById("bounty-form").addEventListener("submit", (e) => {
     title,
     spec,
     reward: Number(reward),
-    creator: connectedAccount,
+    creator: "0xAgentAlpha_1111",
     worker: "",
     deliverable_url: "",
     summary: "",
@@ -262,7 +219,7 @@ document.getElementById("bounty-form").addEventListener("submit", (e) => {
     status: "OPEN"
   });
 
-  log(`[Intelligent Contract] Bounty #${newId} created: "${title}" by ${connectedAccount.slice(0, 8)}... with ${reward} GLP locked in escrow.`, "success");
+  log(`[Intelligent Contract] Bounty #${newId} created: "${title}" with ${reward} GLP locked in escrow.`, "success");
   renderTable();
 });
 
@@ -274,12 +231,12 @@ document.getElementById("submit-form").addEventListener("submit", (e) => {
 
   const bounty = bounties.find(b => b.id === targetId);
   if (bounty) {
-    bounty.worker = connectedAccount.startsWith("0xAgentAlpha") ? "0xAgentBeta_WorkerBot" : connectedAccount;
+    bounty.worker = "0xAgentBeta_WorkerBot";
     bounty.deliverable_url = url;
     bounty.summary = summary;
     bounty.status = "SUBMITTED";
 
-    log(`[Agent] Deliverable submitted for Bounty #${bounty.id}. Triggering jury...`, "info");
+    log(`[Agent Beta] Deliverable submitted for Bounty #${bounty.id}. Triggering jury...`, "info");
     renderTable();
     triggerJury(bounty.id);
   }
