@@ -10,7 +10,7 @@ const GENLAYER_RPC_PRIMARY = "https://studio-dev.genlayer.com/api";
 const GENLAYER_RPC_FALLBACK = "https://studio.genlayer.com/api";
 const GENLAYER_EXPLORER_BASE = "https://explorer-studio.genlayer.com";
 
-let currentContractAddress = "0x7a3B588f61997C99F942007e05C3EbcfC9B1B7b2";
+let currentContractAddress = "0x1D676cfa8F1506a5F99EF969033fbf97E2ac1700";
 let connectedAccount = "0xAgentAlpha_1111";
 let isWeb3Connected = false;
 
@@ -485,3 +485,4 @@ document.addEventListener("DOMContentLoaded", () => {
   log(`[Init] AgentJury client configured for GenLayer Studio Next (Chain ID: 61997).`, "info");
   log(`[Contract Address] ${currentContractAddress}`, "validator");
 });
+
