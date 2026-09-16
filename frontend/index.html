@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AgentJury | GenLayer Agent Tank DApp</title>
+  <title>AgentJury | GenLayer Studio Next (Chain 61997)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,8 +46,8 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white pb-16">
 
-  <!-- Navigation Bar -->
-  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-brand-600/30">
@@ -56,47 +56,66 @@
         <div>
           <div class="flex items-center space-x-2">
             <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">AgentJury</span>
-            <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase rounded-full bg-brand-950 text-brand-400 border border-brand-800">GenVM</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase rounded-full bg-brand-950 text-brand-400 border border-brand-800">Studio Next</span>
           </div>
-          <p class="text-xs text-slate-400">Autonomous A2A Escrow & Arbitration</p>
+          <p class="text-xs text-slate-400">GenLayer Intelligent Contracts • Chain 61997</p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-4">
-        <div class="hidden sm:flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>GenLayer Testnet: <strong class="text-emerald-400">Connected</strong></span>
-        </div>
-        <button id="demo-btn" class="bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-medium text-xs px-4 py-2 rounded-lg shadow-lg shadow-brand-600/20 transition">
-          ▶ Run Full A2A Simulation
+      <div class="flex items-center space-x-3">
+        <!-- Chain 61997 Network Indicator & Switcher -->
+        <button id="network-btn" class="flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono px-3 py-1.5 rounded-xl transition">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="net-dot"></span>
+          <span id="net-label" class="text-slate-300">Chain: <strong class="text-emerald-400">61997</strong></span>
+        </button>
+
+        <!-- Connect Wallet Button -->
+        <button id="wallet-btn" class="flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs px-3.5 py-1.5 rounded-xl shadow-lg shadow-brand-600/20 transition">
+          <span id="wallet-label">Connect Wallet</span>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+  <!-- Contract Configuration Banner -->
+  <div class="bg-slate-900/90 border-b border-slate-800 py-2.5 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Contract (Chain 61997):</span>
+        <input type="text" id="contract-address-input" value="0x7a3B588f61997C99F942007e05C3EbcfC9B1B7b2" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-brand-300 font-mono w-full md:w-[380px] focus:outline-none focus:border-brand-500">
+        <button id="refresh-contract-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-lg transition font-mono">↻ Refresh</button>
+      </div>
+      <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+        <span>RPC: <span class="text-slate-300">studio-dev.genlayer.com/api</span></span>
+        <span>•</span>
+        <a id="explorer-contract-link" href="https://explorer-studio.genlayer.com/address/0x7a3B588f61997C99F942007e05C3EbcfC9B1B7b2" target="_blank" class="text-brand-400 hover:underline flex items-center gap-1">Explorer ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
 
     <!-- Hero / Metrics Overview -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
-        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Bounties</span>
-        <div id="stat-total" class="text-3xl font-bold text-white mt-1">3</div>
-        <span class="text-xs text-emerald-400 font-mono mt-1 inline-block">● 1 Active • 2 Settled</span>
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Live On-Chain Bounties</span>
+        <div id="stat-total" class="text-3xl font-bold text-white mt-1">--</div>
+        <span id="stat-sub" class="text-xs text-emerald-400 font-mono mt-1 inline-block">Fetched from Chain 61997</span>
       </div>
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
         <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Escrow Volume</span>
-        <div id="stat-escrow" class="text-3xl font-bold text-white mt-1 font-mono">1,750 <span class="text-sm font-normal text-brand-400">GLP</span></div>
-        <span class="text-xs text-slate-400 mt-1 inline-block">Locked in Intelligent Contracts</span>
+        <div id="stat-escrow" class="text-3xl font-bold text-white mt-1 font-mono">-- <span class="text-sm font-normal text-brand-400">GLP</span></div>
+        <span class="text-xs text-slate-400 mt-1 inline-block">Locked in GenVM Storage</span>
       </div>
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
-        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Arbitration Accuracy</span>
-        <div class="text-3xl font-bold text-white mt-1 font-mono">99.4%</div>
-        <span class="text-xs text-brand-400 mt-1 inline-block">Via Optimistic Democracy</span>
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Consensus Model</span>
+        <div class="text-3xl font-bold text-white mt-1 font-mono">Equivalence</div>
+        <span class="text-xs text-brand-400 mt-1 inline-block">Optimistic Democracy</span>
       </div>
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 glow-violet">
-        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Human Middlemen</span>
-        <div class="text-3xl font-bold text-emerald-400 mt-1 font-mono">0.00</div>
-        <span class="text-xs text-slate-400 mt-1 inline-block">100% Autonomous Execution</span>
+        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Active Caller Address</span>
+        <div id="stat-account" class="text-sm font-bold text-emerald-400 mt-2 font-mono truncate">0xSimulator_Caller</div>
+        <span class="text-xs text-slate-400 mt-1 inline-block">Studio Next Signer</span>
       </div>
     </div>
 
@@ -110,9 +129,9 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
-              <span>🤖 [Agent A] Post New Bounty</span>
+              <span>🤖 [Agent A] Create On-Chain Bounty</span>
             </h2>
-            <span class="text-xs px-2 py-0.5 rounded bg-brand-950 text-brand-400 border border-brand-800 font-mono">Employer</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-brand-950 text-brand-400 border border-brand-800 font-mono">writeContract</span>
           </div>
 
           <form id="bounty-form" class="space-y-4">
@@ -131,8 +150,8 @@
               <input type="number" id="task-reward" required value="750" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
             </div>
 
-            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-brand-600/20">
-              Lock Escrow & Create Bounty
+            <button type="submit" id="btn-create-bounty" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2">
+              <span>Send create_bounty Transaction</span>
             </button>
           </form>
         </div>
@@ -143,7 +162,7 @@
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
               <span>⚡ [Agent B] Submit Deliverable</span>
             </h2>
-            <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-mono">Worker</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-mono">writeContract</span>
           </div>
 
           <form id="submit-form" class="space-y-4">
@@ -164,50 +183,50 @@
               <input type="text" id="deliverable-summary" required value="Implemented AVX2 vectorized kernel with 5.2x speedup and 100% test coverage." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-sans">
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20">
-              Submit Work & Trigger Validator Jury
+            <button type="submit" id="btn-submit-work" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+              <span>Send submit_deliverable Transaction</span>
             </button>
           </form>
         </div>
 
       </div>
 
-      <!-- Right Column: Live Validator Consensus Visualizer -->
+      <!-- Right Column: Live Validator Consensus Visualizer & Real Receipts -->
       <div class="lg:col-span-7 space-y-6">
         
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col h-full">
           <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
             <div>
               <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                <span>⚖️ GenLayer Validator Jury & Consensus Feed</span>
+                <span>⚖️ Live Validator Jury Consensus & Receipts</span>
               </h2>
-              <p class="text-xs text-slate-400">Optimistic Democracy: Semantic Equivalence & Native HTTP Fetching</p>
+              <p class="text-xs text-slate-400">Chain 61997 • Real Execution & Validator Consensus</p>
             </div>
             <span id="consensus-status-badge" class="px-2.5 py-1 text-xs font-mono font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              Idle
+              Ready
             </span>
           </div>
 
           <!-- Validator Node Network Graphic -->
-          <div class="grid grid-cols-5 gap-2 my-4">
+          <div class="grid grid-cols-5 gap-2 my-2">
             <div id="node-1" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
               <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V1</div>
-              <span class="text-[10px] text-slate-400 font-mono block">Node #1</span>
+              <span class="text-[10px] text-slate-400 font-mono block">Validator 1</span>
               <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
             </div>
             <div id="node-2" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
               <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V2</div>
-              <span class="text-[10px] text-slate-400 font-mono block">Node #2</span>
+              <span class="text-[10px] text-slate-400 font-mono block">Validator 2</span>
               <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
             </div>
             <div id="node-3" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
               <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V3</div>
-              <span class="text-[10px] text-slate-400 font-mono block">Node #3</span>
+              <span class="text-[10px] text-slate-400 font-mono block">Validator 3</span>
               <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
             </div>
             <div id="node-4" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
               <div class="w-7 h-7 mx-auto rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-mono mb-1">V4</div>
-              <span class="text-[10px] text-slate-400 font-mono block">Node #4</span>
+              <span class="text-[10px] text-slate-400 font-mono block">Validator 4</span>
               <span class="node-state text-[9px] text-slate-500 font-semibold uppercase">Idle</span>
             </div>
             <div id="node-5" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
@@ -218,17 +237,20 @@
           </div>
 
           <!-- Live Log Console -->
-          <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 overflow-y-auto max-h-[320px] space-y-1.5" id="console-logs">
-            <div class="text-slate-500">[System] GenLayer Intelligent Contract initialized. Waiting for A2A transactions...</div>
+          <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 overflow-y-auto max-h-[280px] space-y-1.5" id="console-logs">
+            <div class="text-slate-500">[RPC] Connected to GenLayer Studio Next RPC (https://studio-dev.genlayer.com/api).</div>
           </div>
 
-          <!-- Verdict Result Card -->
-          <div id="verdict-card" class="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 hidden">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Latest Jury Settlement</span>
-              <span id="verdict-score" class="px-2 py-0.5 rounded text-xs font-bold font-mono">Score: --</span>
+          <!-- Real Transaction Receipt Card -->
+          <div id="receipt-card" class="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 hidden space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">On-Chain Transaction Receipt</span>
+              <span id="tx-status-badge" class="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">FINALIZED</span>
             </div>
-            <p id="verdict-text" class="text-xs text-slate-400 leading-relaxed"></p>
+            <div class="text-[11px] font-mono text-slate-400 break-all">
+              Tx Hash: <a id="tx-hash-link" href="#" target="_blank" class="text-brand-400 hover:underline">0x...</a>
+            </div>
+            <div id="receipt-details" class="text-xs text-slate-300 bg-slate-900 p-2.5 rounded-lg border border-slate-800"></div>
           </div>
         </div>
 
@@ -236,13 +258,16 @@
 
     </div>
 
-    <!-- Active Bounties & Escrow Ledger Table -->
+    <!-- Active Bounties & Escrow Ledger Table (Refreshed Live from Contract) -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-lg font-bold text-white">📋 On-Chain Escrow & Task Ledger</h2>
-          <p class="text-xs text-slate-400">Real-time state managed by AgentJury Intelligent Contract on GenVM</p>
+          <h2 class="text-lg font-bold text-white">📋 On-Chain Storage & Bounty Ledger</h2>
+          <p class="text-xs text-slate-400">Refreshed live from GenVM Contract on Chain 61997</p>
         </div>
+        <button id="btn-refresh-table" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg transition font-mono">
+          ↻ Reload Storage
+        </button>
       </div>
 
       <div class="overflow-x-auto">
@@ -255,11 +280,11 @@
               <th class="p-3">Reward</th>
               <th class="p-3">Score</th>
               <th class="p-3">Status</th>
-              <th class="p-3 text-right">Action</th>
+              <th class="p-3 text-right">On-Chain Action</th>
             </tr>
           </thead>
           <tbody id="bounties-table" class="divide-y divide-slate-800/60 font-sans">
-            <!-- Dynamically rendered -->
+            <!-- Dynamically rendered from on-chain storage -->
           </tbody>
         </table>
       </div>
