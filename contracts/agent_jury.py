@@ -1,18 +1,20 @@
-﻿# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
-from genlayer import *
+# v0.3.0
+# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
+
+import genlayer as gl
+from genlayer.storage import TreeMap
 import json
 
-class AgentJury(gl.Contract):
+class AgentJury(gl.contract.Contract):
     """
     AgentJury: Autonomous Escrow & Arbitration Protocol for the Agentic Economy.
     Powered by GenLayer Intelligent Contracts, GenVM, and Optimistic Democracy.
     """
-    bounties: dict
-    bounty_counter: int
+    bounties: TreeMap[str, str]
+    bounty_count: str
 
     def __init__(self):
-        self.bounties = {}
-        self.bounty_counter = 0
+        self.bounty_count = "0"
 
     @gl.public.write
     def create_bounty(
@@ -21,27 +23,25 @@ class AgentJury(gl.Contract):
         natural_language_spec: str,
         reward_amount: int
     ) -> int:
-        """
-        Agent A creates a bounty with plain-English acceptance criteria
-        and locks escrow funds.
-        """
-        self.bounty_counter += 1
-        bounty_id = self.bounty_counter
+        new_count = int(self.bounty_count) + 1
+        self.bounty_count = str(new_count)
+        bounty_id = new_count
 
-        self.bounties[str(bounty_id)] = {
+        bounty = {
             "id": bounty_id,
-            "creator": str(gl.message.sender),
+            "creator": str(gl.message.sender_address),
             "title": title,
             "spec": natural_language_spec,
             "reward": reward_amount,
             "worker": "",
             "deliverable_url": "",
             "summary": "",
-            "status": "OPEN", # OPEN, SUBMITTED, SETTLED, REJECTED
+            "status": "OPEN",
             "score": 0,
             "verdict_reasoning": "",
             "eval_count": 0
         }
+        self.bounties[str(bounty_id)] = json.dumps(bounty)
         return bounty_id
 
     @gl.public.write
@@ -51,38 +51,28 @@ class AgentJury(gl.Contract):
         deliverable_url: str,
         summary: str
     ) -> bool:
-        """
-        Agent B submits the deliverable link (GitHub PR, document, or raw data URL).
-        """
         key = str(bounty_id)
         if key not in self.bounties:
             raise Exception("Bounty not found")
         
-        bounty = self.bounties[key]
+        bounty = json.loads(self.bounties[key])
         if bounty["status"] not in ["OPEN", "REJECTED"]:
             raise Exception("Bounty is not open for submission")
 
-        bounty["worker"] = str(gl.message.sender)
+        bounty["worker"] = str(gl.message.sender_address)
         bounty["deliverable_url"] = deliverable_url
         bounty["summary"] = summary
         bounty["status"] = "SUBMITTED"
-        self.bounties[key] = bounty
+        self.bounties[key] = json.dumps(bounty)
         return True
 
     @gl.public.write
     def evaluate_and_settle(self, bounty_id: int) -> dict:
-        """
-        GenLayer validator jury executes the evaluation in consensus:
-        1. Fetches the deliverable artifact via native HTTP in nondet.
-        2. LLM validators inspect the deliverable against the natural language spec.
-        3. Reaches consensus using Optimistic Democracy (semantic equivalence).
-        4. Releases escrow or triggers rejection.
-        """
         key = str(bounty_id)
         if key not in self.bounties:
             raise Exception("Bounty not found")
 
-        bounty = self.bounties[key]
+        bounty = json.loads(self.bounties[key])
         if bounty["status"] != "SUBMITTED":
             raise Exception("Bounty has no submitted deliverable to evaluate")
 
@@ -90,17 +80,13 @@ class AgentJury(gl.Contract):
         url = bounty["deliverable_url"]
         summary = bounty["summary"]
 
-        # Non-deterministic block for native web fetching and LLM review
         def nondet_review():
             deliverable_content = ""
             try:
-                # Fetch live artifact directly via GenLayer native HTTP
                 deliverable_content = gl.nondet.web.get(url)
             except Exception:
-                # Fallback to summary context if URL is a private or mock environment
                 deliverable_content = f"Deliverable Summary: {summary}"
 
-            # Limit payload length to prevent token overflow
             truncated_content = deliverable_content[:3000]
 
             prompt = f"""
@@ -118,14 +104,13 @@ class AgentJury(gl.Contract):
             OBJECTIVE:
             Evaluate whether the submitted work objectively fulfills the acceptance criteria.
             Respond strictly in valid JSON format with NO markdown formatting:
-            {{"passed": true or false, "score": integer_from_0_to_100, "reasoning": "concise explanation"}}
+            {{"passed": true, "score": 95, "reasoning": "concise explanation"}}
             """
             
             raw_response = gl.nondet.exec_prompt(prompt)
             clean_json = raw_response.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_json)
 
-        # Validator consensus via strict equivalence principle
         verdict = gl.eq_principle.strict_eq(nondet_review)
 
         bounty["score"] = int(verdict.get("score", 0))
@@ -134,23 +119,25 @@ class AgentJury(gl.Contract):
 
         if verdict.get("passed", False):
             bounty["status"] = "SETTLED"
-            # In live GenLayer EVM bridge, ghost contract executes fund transfer here:
-            # gl.transfer(bounty["worker"], bounty["reward"])
         else:
             bounty["status"] = "REJECTED"
 
-        self.bounties[key] = bounty
+        self.bounties[key] = json.dumps(bounty)
         return verdict
 
     @gl.public.view
-    def get_bounty(self, bounty_id: int) -> dict:
-        """View details of a specific bounty."""
+    def get_bounty(self, bounty_id: int) -> str:
         key = str(bounty_id)
         if key not in self.bounties:
             raise Exception("Bounty not found")
         return self.bounties[key]
 
     @gl.public.view
-    def list_bounties(self) -> list:
-        """List all active and historical bounties."""
-        return list(self.bounties.values())
+    def list_bounties(self) -> str:
+        all_bounties = []
+        count = int(self.bounty_count)
+        for i in range(1, count + 1):
+            k = str(i)
+            if k in self.bounties:
+                all_bounties.append(json.loads(self.bounties[k]))
+        return json.dumps(all_bounties)

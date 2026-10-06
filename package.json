@@ -1,0 +1,15 @@
+{
+  "name": "agentjury-genlayer",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild frontend/src/sdk_entry.js --bundle --minify --format=iife --outfile=frontend/genlayer-sdk.bundle.js",
+    "test": "node scripts/test_deploy.mjs"
+  },
+  "dependencies": {
+    "genlayer-js": "^1.1.8",
+    "viem": "^2.21.54"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
