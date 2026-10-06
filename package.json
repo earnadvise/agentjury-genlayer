@@ -6,10 +6,8 @@
     "test": "node scripts/test_deploy.mjs"
   },
   "dependencies": {
+    "esbuild": "^0.28.2",
     "genlayer-js": "^1.1.8",
     "viem": "^2.21.54"
-  },
-  "devDependencies": {
-    "esbuild": "^0.28.2"
   }
 }
