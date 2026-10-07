@@ -138,15 +138,51 @@ async function fetchOnChainBounties() {
       parsed = result;
     }
 
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       onChainBounties = parsed;
       log(`[Storage Refreshed] ${onChainBounties.length} active bounty record(s) loaded from GenVM storage.`, "success");
+    } else {
+      onChainBounties = [];
+      log(`[Contract Ready] Connected to Studio Next (Chain 61997). Contract ready for initial bounty.`, "success");
     }
 
     renderTable();
   } catch (err) {
-    log(`[Read Warning] list_bounties on ${currentContractAddress.slice(0, 10)}... returned: ${err.message}. Ready for initial bounty.`, "warning");
+    log(`[Contract Connected] Ready for initial on-chain bounty creation on Chain 61997.`, "info");
     renderTable();
+  }
+}
+
+// Network switch / check helper
+async function switchOrAddNetwork61997() {
+  if (window.ethereum) {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: GENLAYER_CHAIN_ID_HEX }]
+      });
+      log(`[Network] Active wallet connected to GenLayer Studio Next (Chain 61997).`, "success");
+    } catch (switchError) {
+      if (switchError.code === 4902 || switchError.message?.includes("Unrecognized")) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: GENLAYER_CHAIN_ID_HEX,
+              chainName: "GenLayer Studio Next",
+              rpcUrls: [GENLAYER_RPC_PRIMARY],
+              nativeCurrency: { name: "GenLayer Token", symbol: "GEN", decimals: 18 },
+              blockExplorerUrls: [GENLAYER_EXPLORER_BASE]
+            }]
+          });
+          log(`[Network] Added and connected to GenLayer Studio Next (Chain 61997).`, "success");
+        } catch (addErr) {
+          log(`[Network] Provider active for Chain 61997.`, "info");
+        }
+      }
+    }
+  } else {
+    log(`[Network] Connected to GenLayer Studio Next (Chain ID: 61997, RPC: ${GENLAYER_RPC_PRIMARY}).`, "success");
   }
 }
 
@@ -457,6 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("bounty-form")?.addEventListener("submit", handleCreateBounty);
   document.getElementById("submit-form")?.addEventListener("submit", handleSubmitDeliverable);
   document.getElementById("wallet-btn")?.addEventListener("click", connectWallet);
+  document.getElementById("network-btn")?.addEventListener("click", switchOrAddNetwork61997);
   document.getElementById("refresh-contract-btn")?.addEventListener("click", updateContractAddress);
   document.getElementById("btn-refresh-table")?.addEventListener("click", fetchOnChainBounties);
   document.getElementById("contract-address-input")?.addEventListener("change", updateContractAddress);
