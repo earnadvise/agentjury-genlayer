@@ -209,11 +209,12 @@ async function handleCreateBounty(e) {
     const txHash = await activeSigner.writeContract({
       address: currentContractAddress,
       functionName: "create_bounty",
-      args: [title, spec, reward]
+      args: [title, spec, reward],
+      value: BigInt(reward)
     });
 
     log(`[Tx Submitted] Broadcasted hash: ${txHash}`, "validator");
-    showReceipt(txHash, "PROPOSING", `Transaction broadcasted to GenLayer validators. Waiting for block finalization...`);
+    showReceipt(txHash, "PROPOSING", `Transaction broadcasted to GenLayer validators with ${reward} GLP deposit...`);
 
     log(`[Consensus] Waiting for validator quorum receipt...`, "info");
     const receipt = await client.waitForTransactionReceipt({
@@ -222,7 +223,7 @@ async function handleCreateBounty(e) {
     });
 
     log(`[Receipt Confirmed] Transaction ${txHash.slice(0, 18)}... accepted in consensus.`, "success");
-    showReceipt(txHash, "ACCEPTED", `<strong>create_bounty Confirmed on Chain 61997</strong><br>Contract: ${currentContractAddress}<br>Reward Escrowed: ${reward} GLP`);
+    showReceipt(txHash, "ACCEPTED", `<strong>create_bounty Confirmed on Chain 61997</strong><br>Contract: ${currentContractAddress}<br>Reward Deposited into Escrow: ${reward} GLP`);
 
     await fetchOnChainBounties();
   } catch (err) {
@@ -231,6 +232,26 @@ async function handleCreateBounty(e) {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Send create_bounty Transaction</span>`;
+  }
+}
+
+// Refund Bounty (Reclaim Escrow)
+async function handleRefundBounty(bountyId) {
+  log(`[writeContract] Dispatching refund_bounty(#${bountyId})...`, "validator");
+  try {
+    const activeSigner = writeClient || client;
+    const txHash = await activeSigner.writeContract({
+      address: currentContractAddress,
+      functionName: "refund_bounty",
+      args: [Number(bountyId)]
+    });
+    showReceipt(txHash, "PROPOSING", `Broadcasting refund request on Chain 61997...`);
+    await client.waitForTransactionReceipt({ hash: txHash, status: "ACCEPTED" });
+    log(`[Refund Accepted] Escrow reclaimed for Bounty #${bountyId}.`, "success");
+    showReceipt(txHash, "ACCEPTED", `<strong>Refund Confirmed</strong><br>Escrow returned to creator.`);
+    await fetchOnChainBounties();
+  } catch (err) {
+    log(`[Refund Error] ${err.message}`, "error");
   }
 }
 
@@ -426,6 +447,10 @@ function renderTable() {
           </button>
         ` : b.status === 'OPEN' ? `
           <span class="text-[11px] text-slate-500 font-mono">Awaiting Work</span>
+        ` : b.status === 'REJECTED' ? `
+          <button onclick="handleRefundBounty(${b.id})" class="bg-amber-800 hover:bg-amber-700 text-amber-200 px-2.5 py-1 rounded text-[11px] font-semibold transition shadow flex items-center gap-1 ml-auto">
+            <span>Refund Escrow ↩</span>
+          </button>
         ` : `
           <span class="text-[11px] text-emerald-400 font-mono">Settled ✓</span>
         `}
