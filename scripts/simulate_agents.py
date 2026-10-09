@@ -1,4 +1,4 @@
-﻿"""
+"""
 AgentJury Autonomous Agent Simulator & Test Runner
 Tests the full lifecycle of agent-to-agent hiring, deliverable submission,
 LLM validator arbitration, and escrow settlement.
@@ -7,64 +7,92 @@ LLM validator arbitration, and escrow settlement.
 import sys
 import os
 import json
+import types
 
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-class MockGenLayerRuntime:
-    """Mock GenLayer consensus and GenVM execution runtime for local testing."""
-    class gl:
-        class message:
-            sender = "0xAgentAlpha_Creator_1111"
+# Create module mocks for genlayer and genlayer.storage
+mock_genlayer = types.ModuleType("genlayer")
+mock_storage = types.ModuleType("genlayer.storage")
 
-        class public:
-            @staticmethod
-            def write(func):
-                return func
-            @staticmethod
-            def view(func):
-                return func
+class MockTreeMap(dict):
+    pass
 
-        class nondet:
-            @staticmethod
-            def exec_prompt(prompt: str) -> str:
-                # Simulated validator LLM analysis
-                if "O(n)" in prompt and "def two_sum" in prompt:
-                    return json.dumps({
-                        "passed": True,
-                        "score": 98,
-                        "reasoning": "Algorithm runs in linear O(n) time using hash map with full test coverage."
-                    })
-                elif "malicious" in prompt or "syntax error" in prompt:
-                    return json.dumps({
-                        "passed": False,
-                        "score": 15,
-                        "reasoning": "Code failed unit tests and contains syntax errors."
-                    })
-                else:
-                    return json.dumps({
-                        "passed": True,
-                        "score": 90,
-                        "reasoning": "Deliverable satisfies all requested natural language specifications."
-                    })
+mock_storage.TreeMap = MockTreeMap
+mock_genlayer.storage = mock_storage
 
-            class web:
+class MockAddress(str):
+    pass
+
+class MockEVM:
+    @staticmethod
+    def contract_interface(cls):
+        def factory(addr):
+            class DummyInterface:
                 @staticmethod
-                def get(url: str) -> str:
-                    return "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        if target - num in seen:\n            return [seen[target - num], i]\n        seen[num] = i\n    return []"
+                def emit_transfer(value):
+                    pass
+            return DummyInterface()
+        return factory
 
-        class eq_principle:
-            @staticmethod
-            def strict_eq(func):
-                # Simulates 5 validator nodes executing the function and reaching strict majority consensus
-                results = [func() for _ in range(5)]
-                return results[0]
+class MockContract:
+    class Contract:
+        pass
 
-        class Contract:
-            pass
+class MockMessage:
+    sender_address = "0xAgentAlpha_Employer"
+    value = 500
 
-# Inject mock runtime
-sys.modules['genlayer'] = MockGenLayerRuntime
+class MockPublic:
+    class write:
+        def __init__(self, func):
+            self.func = func
+        def __get__(self, instance, owner):
+            if instance is None:
+                return self
+            return lambda *args, **kwargs: self.func(instance, *args, **kwargs)
+        def __call__(self, *args, **kwargs):
+            return self.func(*args, **kwargs)
+        @staticmethod
+        def payable(func):
+            return MockPublic.write(func)
+
+    @staticmethod
+    def view(func):
+        return func
+
+class MockNondet:
+    @staticmethod
+    def exec_prompt(prompt: str) -> str:
+        return json.dumps({
+            "passed": True,
+            "score": 98,
+            "reasoning": "Algorithm runs in linear O(n) time using hash map with full test coverage."
+        })
+
+    class web:
+        @staticmethod
+        def get(url: str) -> str:
+            return "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        if target - num in seen:\n            return [seen[target - num], i]\n        seen[num] = i\n    return []"
+
+class MockEqPrinciple:
+    @staticmethod
+    def strict_eq(func):
+        return func()
+
+mock_genlayer.gl = mock_genlayer
+mock_genlayer.evm = MockEVM
+mock_genlayer.contract = MockContract
+mock_genlayer.message = MockMessage
+mock_genlayer.public = MockPublic
+mock_genlayer.nondet = MockNondet
+mock_genlayer.eq_principle = MockEqPrinciple
+mock_genlayer.Address = MockAddress
+
+sys.modules['genlayer'] = mock_genlayer
+sys.modules['genlayer.storage'] = mock_storage
+
 from contracts.agent_jury import AgentJury
 
 def run_simulation():
@@ -76,26 +104,29 @@ def run_simulation():
 
     # Step 1: Agent Alpha (Employer) creates a task
     print("[1] [AGENT ALPHA] Deploying task bounty to AgentJury Intelligent Contract...")
-    MockGenLayerRuntime.gl.message.sender = "0xAgentAlpha_Employer"
+    MockMessage.sender_address = "0xAgentAlpha_Employer"
+    MockMessage.value = 500
     bounty_id = jury.create_bounty(
         title="Optimize Two-Sum Algorithm",
         natural_language_spec="Implement Two-Sum in Python with strict O(n) time complexity and full type hints.",
         reward_amount=500
     )
-    bounty = jury.get_bounty(bounty_id)
+    raw_bounty = jury.get_bounty(bounty_id)
+    bounty = json.loads(raw_bounty)
     print(f"    [+] Bounty #{bounty_id} created: '{bounty['title']}' | Reward: {bounty['reward']} GLP")
     print(f"    [+] Acceptance Criteria: \"{bounty['spec']}\"")
     print(f"    [+] Initial Status: {bounty['status']}\n")
 
     # Step 2: Agent Beta (Worker) submits deliverable
     print("[2] [AGENT BETA] Claiming task and submitting deliverable...")
-    MockGenLayerRuntime.gl.message.sender = "0xAgentBeta_Developer"
+    MockMessage.sender_address = "0xAgentBeta_Developer"
     jury.submit_deliverable(
         bounty_id=bounty_id,
         deliverable_url="https://github.com/agent-beta/two-sum-opt/pull/1",
         summary="Optimized hash map implementation achieving O(n) time complexity."
     )
-    bounty = jury.get_bounty(bounty_id)
+    raw_bounty = jury.get_bounty(bounty_id)
+    bounty = json.loads(raw_bounty)
     print(f"    [+] Deliverable Submitted by: {bounty['worker']}")
     print(f"    [+] Pull Request URL: {bounty['deliverable_url']}")
     print(f"    [+] Updated Status: {bounty['status']}\n")
@@ -107,7 +138,8 @@ def run_simulation():
     print("    [->] Calculating semantic equivalence across validator jury...")
     
     verdict = jury.evaluate_and_settle(bounty_id)
-    bounty = jury.get_bounty(bounty_id)
+    raw_bounty = jury.get_bounty(bounty_id)
+    bounty = json.loads(raw_bounty)
 
     print(f"\n[4] [FINAL VERDICT & SETTLEMENT]")
     print(f"    [+] Passed: {verdict['passed']}")

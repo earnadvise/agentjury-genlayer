@@ -23,6 +23,10 @@ class AgentJury(gl.contract.Contract):
 
     def __init__(self):
         self.bounty_count = "0"
+        try:
+            self.bounties = TreeMap()
+        except Exception:
+            pass
 
     @gl.public.write.payable
     def create_bounty(
