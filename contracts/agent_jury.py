@@ -32,15 +32,15 @@ class AgentJury(gl.contract.Contract):
     def create_bounty(
         self,
         title: str,
-        natural_language_spec: str,
-        reward_amount: int
+        natural_language_spec: str
     ) -> int:
         """
         Agent A creates a bounty and deposits real native GEN into escrow.
-        Enforces that deposited value matches or exceeds reward_amount.
+        Requires an actual nonzero GEN deposit attached to the transaction.
         """
         deposited = int(gl.message.value)
-        effective_reward = deposited if deposited > 0 else reward_amount
+        if deposited <= 0:
+            raise Exception("Bounty creation requires an actual nonzero GEN deposit in escrow")
 
         new_count = int(self.bounty_count) + 1
         self.bounty_count = str(new_count)
@@ -51,11 +51,11 @@ class AgentJury(gl.contract.Contract):
             "creator": str(gl.message.sender_address),
             "title": title,
             "spec": natural_language_spec,
-            "reward": effective_reward,
+            "reward": deposited,
             "worker": "",
             "deliverable_url": "",
             "summary": "",
-            "status": "OPEN", # OPEN, SUBMITTED, SETTLED, REJECTED, REFUNDED
+            "status": "OPEN", # OPEN, SUBMITTED, EVALUATED_PASSED, SETTLED, REJECTED, REFUND_PENDING, REFUNDED
             "score": 0,
             "verdict_reasoning": "",
             "eval_count": 0
@@ -96,22 +96,33 @@ class AgentJury(gl.contract.Contract):
         2. Fails immediately if the URL cannot be retrieved (no self-authored fallback).
         3. LLM validators inspect the retrieved artifact against the natural language spec.
         4. Reaches consensus using Optimistic Democracy (strict semantic equivalence).
-        5. Executes on-chain token settlement or records rejection.
+        5. Executes on-chain token settlement only upon successful transfer; failures remain retriable.
         """
         key = str(bounty_id)
         if key not in self.bounties:
             raise Exception("Bounty not found")
 
         bounty = json.loads(self.bounties[key])
-        if bounty["status"] != "SUBMITTED":
-            raise Exception("Bounty has no submitted deliverable to evaluate")
+        if bounty["status"] not in ["SUBMITTED", "EVALUATED_PASSED"]:
+            raise Exception("Bounty has no submitted deliverable to evaluate or settle")
+
+        # If already evaluated as passed in a previous round, retry transfer directly
+        if bounty["status"] == "EVALUATED_PASSED":
+            try:
+                _Recipient(gl.Address(bounty["worker"])).emit_transfer(value=int(bounty["reward"]))
+                bounty["status"] = "SETTLED"
+                self.bounties[key] = json.dumps(bounty)
+                return {"passed": True, "score": bounty["score"], "reasoning": "Settlement transfer completed successfully."}
+            except Exception as e:
+                bounty["status"] = "EVALUATED_PASSED"
+                self.bounties[key] = json.dumps(bounty)
+                raise Exception(f"Payout transfer failed; remains retriable: {str(e)}")
 
         spec = bounty["spec"]
         url = bounty["deliverable_url"]
 
         # Non-deterministic block for native web fetching and independent LLM review
         def nondet_review():
-            # 1. Fetch live artifact strictly from the web
             deliverable_content = ""
             try:
                 response = gl.nondet.web.get(url)
@@ -123,14 +134,12 @@ class AgentJury(gl.contract.Contract):
                     }
                 deliverable_content = response[:4000]
             except Exception as e:
-                # Strictly fail if live artifact is unreachable (claimant summary cannot substitute)
                 return {
                     "passed": False,
                     "score": 0,
                     "reasoning": f"Verification failed: Deliverable URL unreachable or invalid ({str(e)})."
                 }
 
-            # 2. Strict LLM auditor prompt
             prompt = f"""
             You are an impartial, strict technical auditor for an on-chain smart contract escrow.
             
@@ -160,14 +169,15 @@ class AgentJury(gl.contract.Contract):
         bounty["eval_count"] += 1
 
         if verdict.get("passed", False):
-            bounty["status"] = "SETTLED"
-            # Execute actual on-chain settlement to worker if reward funds were deposited
+            # Attempt transfer; only mark SETTLED if transfer succeeds
             try:
-                reward_val = int(bounty["reward"])
-                if reward_val > 0 and bounty["worker"]:
-                    _Recipient(gl.Address(bounty["worker"])).emit_transfer(value=reward_val)
-            except Exception:
-                pass
+                _Recipient(gl.Address(bounty["worker"])).emit_transfer(value=int(bounty["reward"]))
+                bounty["status"] = "SETTLED"
+            except Exception as e:
+                # Keep state as EVALUATED_PASSED so settlement remains retriable
+                bounty["status"] = "EVALUATED_PASSED"
+                self.bounties[key] = json.dumps(bounty)
+                raise Exception(f"Evaluation passed ({bounty['score']}/100) but transfer failed; remains retriable: {str(e)}")
         else:
             bounty["status"] = "REJECTED"
 
@@ -175,10 +185,34 @@ class AgentJury(gl.contract.Contract):
         return verdict
 
     @gl.public.write
+    def retry_payout(self, bounty_id: int) -> bool:
+        """
+        Retries settlement payout for a bounty that passed evaluation but whose transfer failed.
+        """
+        key = str(bounty_id)
+        if key not in self.bounties:
+            raise Exception("Bounty not found")
+
+        bounty = json.loads(self.bounties[key])
+        if bounty["status"] != "EVALUATED_PASSED":
+            raise Exception("Bounty is not pending settlement retry")
+
+        try:
+            _Recipient(gl.Address(bounty["worker"])).emit_transfer(value=int(bounty["reward"]))
+            bounty["status"] = "SETTLED"
+            self.bounties[key] = json.dumps(bounty)
+            return True
+        except Exception as e:
+            bounty["status"] = "EVALUATED_PASSED"
+            self.bounties[key] = json.dumps(bounty)
+            raise Exception(f"Payout transfer retry failed: {str(e)}")
+
+    @gl.public.write
     def refund_bounty(self, bounty_id: int) -> bool:
         """
         Allows the creator to reclaim escrowed funds if a bounty was rejected
         or if an open bounty is cancelled before submission.
+        Only marks REFUNDED upon successful transfer; failures remain retriable.
         """
         key = str(bounty_id)
         if key not in self.bounties:
@@ -190,20 +224,25 @@ class AgentJury(gl.contract.Contract):
         if sender != bounty["creator"]:
             raise Exception("Only the bounty creator can request a refund")
 
-        if bounty["status"] not in ["OPEN", "REJECTED"]:
+        if bounty["status"] not in ["OPEN", "REJECTED", "REFUND_PENDING"]:
             raise Exception("Bounty cannot be refunded in current status")
 
         reward_val = int(bounty["reward"])
-        bounty["status"] = "REFUNDED"
-        self.bounties[key] = json.dumps(bounty)
+        if reward_val <= 0:
+            bounty["status"] = "REFUNDED"
+            self.bounties[key] = json.dumps(bounty)
+            return True
 
+        # Perform transfer first; only mark REFUNDED on success
         try:
-            if reward_val > 0:
-                _Recipient(gl.Address(bounty["creator"])).emit_transfer(value=reward_val)
-        except Exception:
-            pass
-
-        return True
+            _Recipient(gl.Address(bounty["creator"])).emit_transfer(value=reward_val)
+            bounty["status"] = "REFUNDED"
+            self.bounties[key] = json.dumps(bounty)
+            return True
+        except Exception as e:
+            bounty["status"] = "REFUND_PENDING"
+            self.bounties[key] = json.dumps(bounty)
+            raise Exception(f"Refund transfer failed, remains retriable: {str(e)}")
 
     @gl.public.view
     def get_bounty(self, bounty_id: int) -> str:

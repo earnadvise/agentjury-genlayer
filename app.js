@@ -209,7 +209,7 @@ async function handleCreateBounty(e) {
     const txHash = await activeSigner.writeContract({
       address: currentContractAddress,
       functionName: "create_bounty",
-      args: [title, spec, reward],
+      args: [title, spec],
       value: BigInt(reward)
     });
 
@@ -232,6 +232,27 @@ async function handleCreateBounty(e) {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Send create_bounty Transaction</span>`;
+  }
+}
+
+// Retry Settlement Payout
+async function handleRetryPayout(bountyId) {
+  log(`[writeContract] Retrying payout for Bounty #${bountyId}...`, "validator");
+  try {
+    const activeSigner = writeClient || client;
+    const txHash = await activeSigner.writeContract({
+      address: currentContractAddress,
+      functionName: "retry_payout",
+      args: [Number(bountyId)]
+    });
+    showReceipt(txHash, "PROPOSING", `Broadcasting retry_payout transaction on Chain 61997...`);
+    await client.waitForTransactionReceipt({ hash: txHash, status: "ACCEPTED" });
+    log(`[Payout Settled] Payout retry completed for Bounty #${bountyId}.`, "success");
+    showReceipt(txHash, "ACCEPTED", `<strong>Payout Retried & Settled</strong><br>Bounty #${bountyId} funds transferred to worker.`);
+    await fetchOnChainBounties();
+  } catch (err) {
+    log(`[Payout Retry Error] ${err.message}`, "error");
+    showReceipt("", "REVERTED", `<strong>Error:</strong> ${err.message}`);
   }
 }
 
@@ -416,8 +437,14 @@ function renderTable() {
     let badge = "";
     if (b.status === "SETTLED") {
       badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">SETTLED</span>`;
+    } else if (b.status === "EVALUATED_PASSED") {
+      badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-600 animate-pulse">PAYOUT PENDING</span>`;
     } else if (b.status === "SUBMITTED") {
       badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800 animate-pulse">EVALUATING</span>`;
+    } else if (b.status === "REFUND_PENDING") {
+      badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">REFUND PENDING</span>`;
+    } else if (b.status === "REFUNDED") {
+      badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-slate-400 border border-slate-700">REFUNDED</span>`;
     } else if (b.status === "REJECTED") {
       badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-950 text-red-400 border border-red-800">REJECTED</span>`;
     } else {
@@ -445,12 +472,18 @@ function renderTable() {
           <button onclick="triggerJuryOnChain(${b.id})" class="bg-brand-600 hover:bg-brand-500 text-white px-2.5 py-1 rounded text-[11px] font-semibold transition shadow flex items-center gap-1 ml-auto">
             <span>Summon Jury ⚖️</span>
           </button>
+        ` : b.status === 'EVALUATED_PASSED' ? `
+          <button onclick="handleRetryPayout(${b.id})" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1 rounded text-[11px] font-semibold transition shadow flex items-center gap-1 ml-auto">
+            <span>Retry Payout 💸</span>
+          </button>
         ` : b.status === 'OPEN' ? `
           <span class="text-[11px] text-slate-500 font-mono">Awaiting Work</span>
-        ` : b.status === 'REJECTED' ? `
+        ` : b.status === 'REJECTED' || b.status === 'REFUND_PENDING' ? `
           <button onclick="handleRefundBounty(${b.id})" class="bg-amber-800 hover:bg-amber-700 text-amber-200 px-2.5 py-1 rounded text-[11px] font-semibold transition shadow flex items-center gap-1 ml-auto">
-            <span>Refund Escrow ↩</span>
+            <span>${b.status === 'REFUND_PENDING' ? 'Retry Refund ↩' : 'Refund Escrow ↩'}</span>
           </button>
+        ` : b.status === 'REFUNDED' ? `
+          <span class="text-[11px] text-slate-400 font-mono">Refunded ↩</span>
         ` : `
           <span class="text-[11px] text-emerald-400 font-mono">Settled ✓</span>
         `}

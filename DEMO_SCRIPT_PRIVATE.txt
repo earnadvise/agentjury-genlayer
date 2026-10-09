@@ -1,0 +1,91 @@
+﻿================================================================================
+                    AGENTJURY: 3-MINUTE DEMO VIDEO SCRIPT
+                   (Private Copy - For Your Video Recording)
+================================================================================
+
+SCENE 1: INTRODUCTION & THE CORE PROBLEM (0:00 - 0:40)
+--------------------------------------------------------------------------------
+[VISUAL]
+Open the live Vercel DApp: https://agentjury-genlayer.vercel.app/
+Show the hero stats (Total Bounties, Escrow Volume) and the Task Ledger table.
+
+[VOICEOVER / WHAT TO SAY]
+"Hello GenLayer team and Agent Tank judges!
+
+In the emerging agentic economy, AI agents are autonomously holding balances,
+coordinating tasks, and hiring other agents for development, research, and data services.
+
+But there is a fundamental bottleneck: traditional smart contracts on Ethereum
+or Solana cannot evaluate whether subjective off-chain work meets natural language
+quality requirements without trusted human middlemen.
+
+Today, we are proud to introduce AgentJury—the decentralized escrow and subjective
+arbitration protocol powered entirely by GenLayer Intelligent Contracts."
+
+
+================================================================================
+SCENE 2: DEPLOYING A BOUNTY VIA AGENT A (0:40 - 1:15)
+--------------------------------------------------------------------------------
+[VISUAL]
+In the left column under "[Agent A] Post New Bounty":
+- Show the Task Title: "Optimize Matrix Multiplication Kernel"
+- Show the Criteria: "Implement vectorized matrix multiplication in Python using SIMD primitives..."
+- Click the "Lock Escrow & Create Bounty" button.
+
+[VOICEOVER / WHAT TO SAY]
+"Here in our dashboard, Agent Alpha needs an optimized algorithm. It specifies
+the criteria in plain English: 'Implement vectorized matrix multiplication in
+Python with SIMD primitives, at least 4x faster than naive loops.'
+
+When Agent Alpha posts the task, our Python GenVM Intelligent Contract locks
+750 GLP in escrow on-chain. Notice how the contract natively stores and parses
+natural language specifications without any external database."
+
+
+================================================================================
+SCENE 3: AGENT B SUBMITS & VALIDATOR JURY EVALUATES (1:15 - 2:15)
+--------------------------------------------------------------------------------
+[VISUAL]
+Under "[Agent B] Submit Deliverable":
+- Select the task ID.
+- Show the GitHub PR URL: "https://github.com/agent-beta/matrix-opt/pull/1"
+- Click "Submit Work & Trigger Validator Jury".
+- Highlight the 5 Validator Nodes (V1 to V5) pulsing and the real-time log feed.
+
+[VOICEOVER / WHAT TO SAY]
+"Next, Agent Beta claims the task, writes the code, and submits their GitHub pull request.
+
+Instantly, GenLayer's validator jury is summoned!
+
+Look at the consensus feed on the right:
+First, the validators use GenLayer's native HTTP in a non-deterministic block to
+fetch the live pull request diff from GitHub.
+
+Second, each validator's connected LLM reviews the code against the original
+acceptance criteria.
+
+Third, via GenLayer's Optimistic Democracy and the equivalence principle, the
+validator nodes achieve strict semantic consensus on the score and reasoning."
+
+
+================================================================================
+SCENE 4: INSTANT SETTLEMENT & CONCLUSION (2:15 - 3:00)
+--------------------------------------------------------------------------------
+[VISUAL]
+Show the green Verdict Card appear:
+- Score: 96/100
+- Status: SETTLED
+- Show the Escrow Ledger update with funds released to the worker.
+
+[VOICEOVER / WHAT TO SAY]
+"Because the deliverable met the criteria with a score of 96, the Intelligent
+Contract automatically settles the escrow and transfers 750 GLP to Agent Beta.
+
+If the deliverable had failed or contained malicious code, the jury would have
+rejected it with full on-chain reasoning.
+
+With AgentJury, the agentic economy now has a trustless, zero-oracle labor
+escrow layer.
+
+Thank you, and let's keep building on GenLayer!"
+================================================================================

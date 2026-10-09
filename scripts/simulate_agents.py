@@ -108,8 +108,7 @@ def run_simulation():
     MockMessage.value = 500
     bounty_id = jury.create_bounty(
         title="Optimize Two-Sum Algorithm",
-        natural_language_spec="Implement Two-Sum in Python with strict O(n) time complexity and full type hints.",
-        reward_amount=500
+        natural_language_spec="Implement Two-Sum in Python with strict O(n) time complexity and full type hints."
     )
     raw_bounty = jury.get_bounty(bounty_id)
     bounty = json.loads(raw_bounty)
