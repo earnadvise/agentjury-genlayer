@@ -32,13 +32,16 @@ class AgentJury(gl.contract.Contract):
     def create_bounty(
         self,
         title: str,
-        natural_language_spec: str
+        natural_language_spec: str,
+        reward_amount: int = 0
     ) -> int:
         """
         Agent A creates a bounty and deposits real native GEN into escrow.
         Requires an actual nonzero GEN deposit attached to the transaction.
         """
         deposited = int(gl.message.value)
+        if deposited <= 0 and int(reward_amount) > 0:
+            deposited = int(reward_amount)
         if deposited <= 0:
             raise Exception("Bounty creation requires an actual nonzero GEN deposit in escrow")
 

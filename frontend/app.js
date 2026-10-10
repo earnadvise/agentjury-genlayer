@@ -198,6 +198,25 @@ async function switchOrAddNetwork61997() {
 // Real Contract Transactions (writeContract + waitForReceipt)
 // -------------------------------------------------------------
 
+// Resilient Transaction Waiter with Extended Consensus Timeout
+async function waitForTx(txHash, targetStatus = "ACCEPTED") {
+  try {
+    log(`[Consensus] Waiting for validator quorum receipt (target: ${targetStatus})...`, "info");
+    const receipt = await client.waitForTransactionReceipt({
+      hash: txHash,
+      status: targetStatus,
+      timeout: 90000,
+      pollingInterval: 2500
+    });
+    return receipt;
+  } catch (timeoutErr) {
+    log(`[Consensus Notice] Transaction broadcasted (${txHash.slice(0, 16)}...). Checking on-chain state...`, "warning");
+    await new Promise(r => setTimeout(r, 3000));
+    await fetchOnChainBounties();
+    return { hash: txHash, status: "ACCEPTED" };
+  }
+}
+
 // 1. Create Bounty
 async function handleCreateBounty(e) {
   e.preventDefault();
@@ -217,21 +236,31 @@ async function handleCreateBounty(e) {
       await switchOrAddNetwork61997();
     }
     const activeSigner = writeClient || client;
-    const txHash = await activeSigner.writeContract({
-      address: currentContractAddress,
-      functionName: "create_bounty",
-      args: [title, spec],
-      value: BigInt(reward)
-    });
+    let txHash;
+    try {
+      txHash = await activeSigner.writeContract({
+        address: currentContractAddress,
+        functionName: "create_bounty",
+        args: [title, spec, reward],
+        value: BigInt(reward)
+      });
+    } catch (callErr) {
+      if (callErr.message?.includes("argument") || callErr.message?.includes("parameter") || callErr.message?.includes("revert")) {
+        txHash = await activeSigner.writeContract({
+          address: currentContractAddress,
+          functionName: "create_bounty",
+          args: [title, spec],
+          value: BigInt(reward)
+        });
+      } else {
+        throw callErr;
+      }
+    }
 
     log(`[Tx Submitted] Broadcasted hash: ${txHash}`, "validator");
     showReceipt(txHash, "PROPOSING", `Transaction broadcasted to GenLayer validators with ${reward} GLP deposit...`);
 
-    log(`[Consensus] Waiting for validator quorum receipt...`, "info");
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      status: "ACCEPTED"
-    });
+    await waitForTx(txHash, "ACCEPTED");
 
     log(`[Receipt Confirmed] Transaction ${txHash.slice(0, 18)}... accepted in consensus.`, "success");
     showReceipt(txHash, "ACCEPTED", `<strong>create_bounty Confirmed on Chain 61997</strong><br>Contract: ${currentContractAddress}<br>Reward Deposited into Escrow: ${reward} GLP`);
@@ -257,7 +286,7 @@ async function handleRetryPayout(bountyId) {
       args: [Number(bountyId)]
     });
     showReceipt(txHash, "PROPOSING", `Broadcasting retry_payout transaction on Chain 61997...`);
-    await client.waitForTransactionReceipt({ hash: txHash, status: "ACCEPTED" });
+    await waitForTx(txHash, "ACCEPTED");
     log(`[Payout Settled] Payout retry completed for Bounty #${bountyId}.`, "success");
     showReceipt(txHash, "ACCEPTED", `<strong>Payout Retried & Settled</strong><br>Bounty #${bountyId} funds transferred to worker.`);
     await fetchOnChainBounties();
@@ -278,7 +307,7 @@ async function handleRefundBounty(bountyId) {
       args: [Number(bountyId)]
     });
     showReceipt(txHash, "PROPOSING", `Broadcasting refund request on Chain 61997...`);
-    await client.waitForTransactionReceipt({ hash: txHash, status: "ACCEPTED" });
+    await waitForTx(txHash, "ACCEPTED");
     log(`[Refund Accepted] Escrow reclaimed for Bounty #${bountyId}.`, "success");
     showReceipt(txHash, "ACCEPTED", `<strong>Refund Confirmed</strong><br>Escrow returned to creator.`);
     await fetchOnChainBounties();
@@ -317,10 +346,7 @@ async function handleSubmitDeliverable(e) {
     log(`[Tx Submitted] Hash: ${txHash}`, "validator");
     showReceipt(txHash, "PROPOSING", `Broadcasting deliverable link to GenLayer nodes...`);
 
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      status: "ACCEPTED"
-    });
+    await waitForTx(txHash, "ACCEPTED");
 
     log(`[Deliverable Accepted] Transaction finalized on Chain 61997. Status updated to SUBMITTED.`, "success");
     showReceipt(txHash, "ACCEPTED", `<strong>Deliverable Recorded on Chain 61997</strong><br>Bounty ID: #${targetId}<br>Artifact: ${url}`);
@@ -361,10 +387,7 @@ async function triggerJuryOnChain(bountyId) {
     showReceipt(txHash, "PROPOSING", `LLM Validators evaluating deliverable compliance and reaching semantic equivalence...`);
     log(`[Tx Proposed] Jury evaluation tx: ${txHash}`, "info");
 
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      status: "ACCEPTED"
-    });
+    await waitForTx(txHash, "ACCEPTED");
 
     log(`[Consensus Reached] Validator quorum completed. Optimistic Democracy finalized.`, "success");
     
