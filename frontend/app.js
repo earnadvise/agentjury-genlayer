@@ -157,13 +157,18 @@ async function fetchOnChainBounties() {
 async function switchOrAddNetwork61997() {
   if (window.ethereum) {
     try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: GENLAYER_CHAIN_ID_HEX }]
-      });
+      const currentChainHex = await window.ethereum.request({ method: "eth_chainId" });
+      if (currentChainHex && currentChainHex.toLowerCase() !== GENLAYER_CHAIN_ID_HEX.toLowerCase()) {
+        log(`[Network] Switching wallet to GenLayer Studio Next (Chain 61997)...`, "warning");
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: GENLAYER_CHAIN_ID_HEX }]
+        });
+      }
       log(`[Network] Active wallet connected to GenLayer Studio Next (Chain 61997).`, "success");
+      return true;
     } catch (switchError) {
-      if (switchError.code === 4902 || switchError.message?.includes("Unrecognized")) {
+      if (switchError.code === 4902 || switchError.code === -32603 || switchError.message?.includes("Unrecognized") || switchError.message?.includes("4902")) {
         try {
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
@@ -176,14 +181,17 @@ async function switchOrAddNetwork61997() {
             }]
           });
           log(`[Network] Added and connected to GenLayer Studio Next (Chain 61997).`, "success");
+          return true;
         } catch (addErr) {
-          log(`[Network] Provider active for Chain 61997.`, "info");
+          log(`[Network] Notice: Please confirm GenLayer network switch in MetaMask.`, "warning");
         }
+      } else {
+        log(`[Network] Notice: MetaMask chain is currently ${switchError.message || "different"}.`, "warning");
       }
+      return false;
     }
-  } else {
-    log(`[Network] Connected to GenLayer Studio Next (Chain ID: 61997, RPC: ${GENLAYER_RPC_PRIMARY}).`, "success");
   }
+  return true;
 }
 
 // -------------------------------------------------------------
@@ -205,6 +213,9 @@ async function handleCreateBounty(e) {
   log(`[Payload] title: "${title}", spec: "${spec.slice(0, 40)}...", reward: ${reward} GLP`, "info");
 
   try {
+    if (window.ethereum) {
+      await switchOrAddNetwork61997();
+    }
     const activeSigner = writeClient || client;
     const txHash = await activeSigner.writeContract({
       address: currentContractAddress,
@@ -505,6 +516,7 @@ async function connectWallet() {
   if (window.ethereum) {
     try {
       btnLabel.textContent = "Connecting...";
+      await switchOrAddNetwork61997();
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       if (accounts && accounts.length > 0) {
         connectedAccount = accounts[0];
@@ -521,7 +533,7 @@ async function connectWallet() {
         const short = `${connectedAccount.slice(0, 6)}...${connectedAccount.slice(-4)}`;
         btnLabel.textContent = short;
         if (accountEl) accountEl.textContent = short;
-        log(`[Wallet Connected] ${connectedAccount}`, "success");
+        log(`[Wallet Connected] ${connectedAccount} on GenLayer Studio Next (Chain 61997)`, "success");
       }
     } catch (err) {
       btnLabel.textContent = "Connect Wallet";
